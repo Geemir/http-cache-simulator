@@ -1,5 +1,7 @@
 # ICS HTTP Cache Simulator Roadmap
 
+[简体中文](roadmap.zh-CN.md)
+
 All team deadlines use Shanghai time. The Brightspace deadline is Friday, December 4, 2026 at 17:59. Aim to have the final ZIP and video link ready by December 3 at 21:00.
 
 ## Implementation plan

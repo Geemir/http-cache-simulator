@@ -1,5 +1,7 @@
 # ICS HTTP Cache Simulator
 
+[简体中文](README.zh-CN.md)
+
 This Python command-line simulator replays chronological requests from multiple clients against a shared HTTP cache. The starter includes FIFO, byte capacity accounting, and JSON metrics for the full trace and for each client.
 
 ## Quick start
