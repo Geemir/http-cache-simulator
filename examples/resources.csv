@@ -1,0 +1,6 @@
+resource_id,size_bytes,origin_latency_ms
+a,4,20
+b,6,40
+c,4,60
+d,11,80
+e,10,100
