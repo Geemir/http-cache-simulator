@@ -2,47 +2,45 @@
 
 [English](roadmap.md)
 
-本页日期和时间均为上海时间。Brightspace 提交截止时间为 **2026 年 12 月 4 日（周五）17:59**。团队计划于 **12 月 3 日 21:00** 前准备好最终 ZIP 和视频链接。
+**时间（均为上海时间）** — **2026 年 12 月 3 日 21:00** 前准备好 ZIP 和视频链接。Brightspace 正式截止时间是 **12 月 4 日（周五）17:59**。
 
-## 实现方案
+程序按顺序读取一份文件请求列表，也叫请求轨迹。缓存里已经有该文件，就算一次**命中**。找不到就是**未命中**，程序会计算从原本提供文件的服务器（源站）下载所需的时间和字节数。缓存放不下新文件时，由缓存规则决定先移出谁。我们用同样的请求列表测试四种规则，比较各自的表现。
 
-模拟器是一个使用 Python 3.10 或更高版本的命令行程序。当前版本使用 Python 标准库。
+## 每个人要做什么
 
-| 路径 | 职责 |
-| --- | --- |
-| `cache_sim/models.py` | 定义资源、请求、缓存条目和指标等数据结构 |
-| `cache_sim/io.py` | 将 CSV 数据转换为模拟器使用的记录 |
-| `cache_sim/simulator.py` | 按顺序处理请求并计算性能指标 |
-| `cache_sim/policies.py` | 定义缓存淘汰规则 |
-| `cache_sim/__main__.py` | 提供命令行接口（CLI） |
-| `tests/` | 保存测试用例 |
-| `examples/` | 保存人工构造的 CSV 测试数据 |
+### Oscar · 找课程文件、准备请求列表、组织演示
 
-命令行接口以 JSON 导出整体与各客户端的指标，供实验运行器统一收集。模拟器核心记录缓存占用、命中与未命中、条目访问计数，以及各请求对应的客户端。淘汰策略从现有缓存条目中选择要移除的资源。可选的事件回调可以按处理顺序记录命中、未命中和淘汰事件，以便核对参考输出。CSV 读取器按文件中的时间顺序处理各行。人工构造的样例采用 [中文 README](../README.zh-CN.md#输入与输出) 中的 CSV 格式。收到课程参考文件后，需逐项确认实际表头及单位。
+1. **11 月 20 日** — 先去 Brightspace 找两个课程 CSV 和老师给的参考输出，发给 Daniel 和 Alyx。用表格做一个短例子，手算应该得到什么结果。 [#1](https://github.com/Geemir/http-cache-simulator/issues/1)
+2. **11 月 25 日** — 按 Ryan 给的要求，做三份请求列表，分别模拟重复访问、顺序访问和混合访问。把列表、对应的资源表和制作方法交给 Ryan。 [#6](https://github.com/Geemir/http-cache-simulator/issues/6)
+3. **12 月 2 日** — 写一份可以照着做的运行说明，请一名队友试跑。组织 12 分钟录制，每人讲 3 分钟，最后检查 YouTube 链接能打开。 [#11](https://github.com/Geemir/http-cache-simulator/issues/11)
 
-参考验证从空缓存开始，容量为 102,400 字节（100 KiB）。命中延迟为 5 ms，未命中延迟取对应资源的源站获取延迟。超过缓存容量的资源直接由源站提供。每次评估都重新初始化为空缓存。对同一实验配置，各策略使用相同的请求轨迹、容量及其他参数。整体及各客户端均报告请求命中率、字节命中率、平均响应时间和源站流量，并保存原始测量结果、输入文件及复现命令。
+### Alyx · 完成三种标准规则并检查结果
 
-## 分工与验收
+1. **11 月 23 日** — 先看已有的 FIFO 代码。让三种标准规则都能运行，用短测试证明每种规则会移出哪个文件。 [#2](https://github.com/Geemir/http-cache-simulator/issues/2)
+2. **11 月 25 日** — Oscar 共享参考文件、Daniel 跑通课程输入后，用三种标准规则各跑一次。交一份老师的预期值与程序实际结果的对照表，附上可以重跑的命令。 [#5](https://github.com/Geemir/http-cache-simulator/issues/5)
+3. **12 月 1 日** — 抽查 Ryan 的几组结果，写清程序怎么工作、团队怎么核对结果，把报告草稿交给 Daniel。 [#10](https://github.com/Geemir/http-cache-simulator/issues/10)
 
-| 负责人 | 日期 | 交付物 | 验收标准 |
-| --- | --- | --- | --- |
-| Oscar | 11 月 20 日 | 整理课程输入文件，并手算一条小型验证轨迹 | 在团队工作区共享两个 CSV 和参考输出，记录表头及单位，写出一条人工请求轨迹的预期事件与指标。 [#1](https://github.com/Geemir/http-cache-simulator/issues/1) |
-| Alyx | 11 月 23 日 | 完成 FIFO、LRU 和 LFU | 用单元测试区分命中后各策略的淘汰行为，覆盖 LFU 访问次数相同的情形、多条目淘汰、超大资源不入缓存和资源恰好填满缓存。 [#2](https://github.com/Geemir/http-cache-simulator/issues/2) |
-| Daniel | 11 月 23 日 | 接入课程 CSV 并导出逐请求事件 | 读取课程提供的文件，提供按顺序导出命中、未命中和淘汰事件的 CLI 命令，并验证新克隆的仓库可以运行。 [#3](https://github.com/Geemir/http-cache-simulator/issues/3) |
-| Ryan | 11 月 23 日 | 确定自定义策略与实验方案 | 在查看最终结果前，说明优化目标、缓存准入和淘汰规则、并列判定规则、实验假设，以及负载与容量取值。 [#4](https://github.com/Geemir/http-cache-simulator/issues/4) |
-| Alyx | 11 月 25 日 | 对照课程输出验证三种基线策略 | 核对已发布的全部指标及可用的事件明细，记录差异和处理结果，保留可重复执行的验证命令。 [#5](https://github.com/Geemir/http-cache-simulator/issues/5) |
-| Oscar | 11 月 25 日 | 准备三类可复现的工作负载轨迹 | 按 Ryan 的实验设计构造重复访问、顺序访问和混合负载，记录访问模式、客户端标识，并在使用随机生成时记录随机种子。 [#6](https://github.com/Geemir/http-cache-simulator/issues/6) |
-| Daniel | 11 月 27 日 | 自动运行策略、负载与容量的组合 | 每组实验从空缓存开始，稳定导出机器可读的整体及分客户端指标，记录一条复现命令。 [#7](https://github.com/Geemir/http-cache-simulator/issues/7) |
-| Ryan | 11 月 27 日 | 实现并测试自定义策略 | 让 CLI 可以选择该策略，测试评分与并列判定规则，并用一条针对性的人工轨迹验证预期行为。 [#8](https://github.com/Geemir/http-cache-simulator/issues/8) |
-| Ryan | 11 月 29 日 | 运行实验并整理结果、图表和报告分析 | 保存原始数据。解释策略表现如何随负载与容量变化、指标之间有何取舍，以及各客户端受到的影响。 [#9](https://github.com/Geemir/http-cache-simulator/issues/9) |
-| Alyx | 12 月 1 日 | 复核实验正确性并撰写报告相关章节 | 独立复算并抽查指标与策略行为，撰写模拟器、数据结构和参考验证章节。 [#10](https://github.com/Geemir/http-cache-simulator/issues/10) |
-| Oscar | 12 月 2 日 | 编写 HOWTO、从新克隆或解压的副本验证流程，并协调录制 | 让一名队友按 HOWTO 复现一次运行。协调 12 分钟的演示脚本，每位组员讲解 3 分钟，并安排可复现的 CLI 演示。 [#11](https://github.com/Geemir/http-cache-simulator/issues/11) |
-| Daniel | 12 月 3 日 | 整合 3–4 页技术报告并验证提交包 | 从 ZIP 解压后运行验证，核对输入、输出、说明和报告是否齐全，并在 Brightspace 提交前验证 YouTube 链接。 [#12](https://github.com/Geemir/http-cache-simulator/issues/12) |
+### Ryan · 设计新规则并解释实验结果
 
-## 里程碑
+1. **11 月 23 日** — 先选你想改善的指标，比如响应时间或源站流量。写下新规则怎么工作、实验用哪些请求列表和缓存大小。把访问模式交给 Oscar，把要跑的组合交给 Daniel。 [#4](https://github.com/Geemir/http-cache-simulator/issues/4)
+2. **11 月 27 日** — 把规则写进程序，用短请求列表验证实际行为。 [#8](https://github.com/Geemir/http-cache-simulator/issues/8)
+3. **11 月 29 日** — 用 Oscar 的输入文件和 Daniel 的批量命令跑四种规则。保存结果和图，解释每种规则在什么情况下比较好、不同客户端受到什么影响。把结果交给 Alyx 核对，把分析交给 Daniel。 [#9](https://github.com/Geemir/http-cache-simulator/issues/9)
 
-- **11 月 23 日 21:00** — 三种标准策略、课程 CSV 读取流程和自定义策略方案就绪。Daniel 检查集成，Alyx 和 Ryan 一起核对模拟假设。 [M1](https://github.com/Geemir/http-cache-simulator/milestone/1)
-- **11 月 29 日 21:00** — 完成基线验证、自定义策略测试和实验矩阵，产出初版图表。Ryan 和 Oscar 核对负载轨迹，Alyx 抽查结果。 [M2](https://github.com/Geemir/http-cache-simulator/milestone/2)
-- **12 月 3 日 21:00** — 审阅报告和 ZIP，完成四位成员的录制并验证视频链接。Daniel 和 Oscar 一起检查实际提交文件。 [M3](https://github.com/Geemir/http-cache-simulator/milestone/3)
+### Daniel · 让程序易于运行并整理提交材料
 
-负载准备与自定义策略设计可和基线开发并行。正式结论以完整的参考运行及经核验的官方指标为基础。每位成员查看自己任务所依赖的 issue，并在视频中说明自己的贡献。
+1. **11 月 23 日** — 先跑 README 的样例。收到 Oscar 的课程文件后，让程序能读这些文件，并加一个选项，把每条请求中发生的事写进日志。把运行命令交给 Alyx。 [#3](https://github.com/Geemir/http-cache-simulator/issues/3)
+2. **11 月 27 日** — 做一个命令，一次跑完计划里的实验并生成结果表。用样例试跑后，把命令交给 Ryan。 [#7](https://github.com/Geemir/http-cache-simulator/issues/7)
+3. **12 月 3 日** — 把各部分整合成 3–4 页报告，按要求打包 ZIP，并解压到新目录试跑。和 Oscar 一起核对最终 ZIP 和视频链接。 [#12](https://github.com/Geemir/http-cache-simulator/issues/12)
+
+## 团队检查点
+
+- **11 月 23 日 21:00** — 三种标准规则能跑，程序能读取课程文件，新规则的设计已写清楚。 [M1](https://github.com/Geemir/http-cache-simulator/milestone/1)
+- **11 月 29 日 21:00** — 已核对课程参考结果，四种规则已按计划的请求列表和缓存大小跑完，初版图表就绪。 [M2](https://github.com/Geemir/http-cache-simulator/milestone/2)
+- **12 月 3 日 21:00** — 报告和 ZIP 已检查，四人均完成录制，视频链接可打开。 [M3](https://github.com/Geemir/http-cache-simulator/milestone/3)
+
+## 写代码和跑实验时查这里
+
+- 使用 Python 3.10 或以上版本。现有代码只用标准库。`cache_sim/models.py` 定义数据，`cache_sim/io.py` 读取 CSV，`cache_sim/simulator.py` 处理请求，`cache_sim/policies.py` 保存缓存规则，`cache_sim/__main__.py` 负责运行命令。测试在 `tests/`，样例 CSV 在 `examples/`。 [运行样例](../README.zh-CN.md#快速开始)
+- 程序按文件行的顺序处理请求。接入课程 CSV 前，先核对表头和单位。模拟器可以按顺序记录命中、未命中和移出哪些文件，并以 JSON 输出整体和每个客户端的统计。
+- 核对老师的参考结果时，从 **102,400 字节**的空缓存开始。命中按 **5 ms** 计算，未命中按资源表里的源站获取时间计算。比整个缓存还大的文件不放入缓存。
+- 正式实验每次都从空缓存开始。所有规则用同样的请求列表和缓存大小。保存输入、运行命令和原始结果。整体和每个客户端都统计请求命中率、字节命中率、平均响应时间和源站流量。

@@ -2,37 +2,45 @@
 
 [简体中文](roadmap.zh-CN.md)
 
-All team deadlines use Shanghai time. The Brightspace deadline is Friday, December 4, 2026 at 17:59. Aim to have the final ZIP and video link ready by December 3 at 21:00.
+**Timeline (Shanghai time)** — Have the ZIP and video link ready by **December 3, 2026 at 21:00**. The Brightspace deadline is **Friday, December 4 at 17:59**.
 
-## Implementation plan
+The program reads a list of file requests in order. It checks whether each file is already in the shared cache. Finding it is a *hit*. Otherwise it is a *miss*, and the program counts the time and bytes needed to download it from the original server. If a new file needs room, the chosen cache rule decides what to remove. We will run the same request lists under four cache rules and compare the results.
 
-The simulator is a Python 3.10+ command-line program. The starter uses the standard library. `cache_sim/models.py` defines the records, `cache_sim/io.py` adapts CSV files, `cache_sim/simulator.py` processes requests and calculates metrics, `cache_sim/policies.py` contains replacement rules, and `cache_sim/__main__.py` defines the CLI. `tests/` contains the test suite, and `examples/` contains the synthetic CSV fixtures. The CLI exports global and per-client metrics as JSON so the experiment runner can collect them consistently.
+## Who does what
 
-The simulation core owns capacity accounting, hit/miss modeling, counters for cached entries, and per-client attribution. Replacement policies select an eviction victim from the current entries. An optional event callback can capture ordered hits, misses, and evictions for reference validation. The CSV reader consumes rows in chronological file order. The synthetic fixtures use an explicitly documented CSV schema. Confirm the course headers and units when the reference files arrive.
+### Oscar · Find the course files, prepare request lists, and organize the demo
 
-For reference validation, start with an empty 102,400-byte cache, use a 5 ms hit latency and each resource's stated origin latency on misses, and bypass storage for oversized objects. For every evaluation run use a fresh cache and the same inputs and configuration across policies. Report request and byte hit ratios, mean latency, and origin bytes globally and per client. Store raw measurements and the commands and inputs needed to reproduce them.
+1. **Nov 20** — Start in Brightspace. Share the two course CSVs and the teacher’s expected results with Daniel and Alyx. Make a short example in a spreadsheet and calculate its expected results by hand. [#1](https://github.com/Geemir/http-cache-simulator/issues/1)
+2. **Nov 25** — Use Ryan’s plan to make three request lists: repeated, sequential, and mixed. Give Ryan the lists, their matching resource tables, and notes on how to make them again. [#6](https://github.com/Geemir/http-cache-simulator/issues/6)
+3. **Dec 2** — Write steps someone can follow to run the program, and ask a teammate to try them. Organize the 12-minute recording with three minutes per person and check the YouTube link. [#11](https://github.com/Geemir/http-cache-simulator/issues/11)
 
-## Owners and work items
+### Alyx · Finish and check the cache rules
 
-| Owner | Due | Deliverable | Acceptance check |
-| --- | --- | --- | --- |
-| Oscar | Nov 20 | Inventory the course inputs and hand-calculate a small validation trace | Provide both CSVs and reference outputs through the team workspace, document headers and units, and write expected events and metrics for a small synthetic trace. |
-| Alyx | Nov 23 | Finish FIFO, LRU, and LFU | Unit tests distinguish hit effects and LFU tie-breaking, cover multiple evictions, and verify oversized bypass and exact capacity. |
-| Daniel | Nov 23 | Integrate official CSV input and request event export | Load the supplied files, provide a CLI command for exporting ordered hit/miss/eviction events, and test running from a fresh clone. |
-| Ryan | Nov 23 | Specify the custom policy and experiment protocol | State the objective, eviction/admission rules, deterministic tie-break, hypotheses, and workload/capacity selections before reviewing final results. |
-| Alyx | Nov 25 | Verify the three baselines against course outputs | Compare all published measures and event details available, document mismatch resolutions, and preserve a repeatable validation command. |
-| Oscar | Nov 25 | Prepare three repeatable workload traces | Produce repetitive, sequential, and mixed workloads from Ryan's design, with pattern definitions, client IDs, and a seed if generated. |
-| Daniel | Nov 27 | Automate the policy/workload/capacity matrix | Run the configurations with empty caches and export stable machine-readable global and client rows. Document one reproduction command. |
-| Ryan | Nov 27 | Implement and test the custom policy | Register it in the CLI, test the chosen scoring and tie rules, and show an expected effect with a focused synthetic trace. |
-| Ryan | Nov 29 | Run experiments and prepare results, figures, and report analysis | Save raw data. Explain changes across workloads and capacities, trade-offs between metrics, and outcomes for individual clients. |
-| Alyx | Dec 1 | Audit experiment correctness and contribute technical report sections | Spot-check independent metrics and policy behavior, and write the simulator, data structures, and reference-validation sections. |
-| Oscar | Dec 2 | Write HOWTO, test a clean copy, and coordinate the recorded demo | Another teammate reproduces a run from HOWTO. Coordinate a 12-minute script with one three-minute segment per member and a reproducible CLI demo. |
-| Daniel | Dec 3 | Integrate the 3–4 page report and verify the submission package | Test the extracted ZIP, verify inputs, outputs, instructions and report are included, and check the YouTube link before Brightspace submission. |
+1. **Nov 23** — Start with the FIFO code. Get the three standard rules working and write short tests that show which files each one removes. [#2](https://github.com/Geemir/http-cache-simulator/issues/2)
+2. **Nov 25** — Once Oscar shares the reference files and Daniel gets the course input working, run the three standard rules. Share a table of expected and actual results and the command to repeat the check. [#5](https://github.com/Geemir/http-cache-simulator/issues/5)
+3. **Dec 1** — Check a few of Ryan’s results and write the report sections on how the program works and how the team checked its results. Send the draft to Daniel. [#10](https://github.com/Geemir/http-cache-simulator/issues/10)
 
-## Checkpoints
+### Ryan · Design our rule and explain what the experiments show
 
-- **Nov 23 at 21:00** — Standard policies, official input path, and custom strategy proposal ready. Daniel reviews the integration, and Alyx reviews assumptions with Ryan.
-- **Nov 29 at 21:00** — Baselines validated, custom policy tested, experiment matrix run, and preliminary figures ready. Ryan reviews the workload traces with Oscar, and Alyx spot-checks results.
-- **Dec 3 at 21:00** — Report and ZIP reviewed, all four contributions recorded, and link tested. Daniel and Oscar check the exact submission files together.
+1. **Nov 23** — Start by choosing what to improve, such as response time or traffic. Write down how the new rule works and which inputs and cache sizes to test. Give Oscar the request patterns and Daniel the planned combinations. [#4](https://github.com/Geemir/http-cache-simulator/issues/4)
+2. **Nov 27** — Add the new rule to the program. Test it on a short request list that shows what it does. [#8](https://github.com/Geemir/http-cache-simulator/issues/8)
+3. **Nov 29** — Use Oscar’s inputs and Daniel’s batch command to test all four rules. Save the results and charts. Explain when each rule does well and how it affects different clients. Share the results with Alyx and the write-up with Daniel. [#9](https://github.com/Geemir/http-cache-simulator/issues/9)
 
-Start workload preparation and custom-policy design while the baselines are under development. Use the complete reference run and confirmed official metrics before drawing final conclusions. Each teammate reviews the issues they depend on and explains their own contribution in the presentation.
+### Daniel · Make the program easy to run and assemble the submission
+
+1. **Nov 23** — Start with the example command in the README. Once Oscar shares the course files, make the program read them and add an option to write a log of what happened for each request. Give Alyx the command to run it. [#3](https://github.com/Geemir/http-cache-simulator/issues/3)
+2. **Nov 27** — Make one command to run all the requested experiments and produce a result table. Try it on the starter example and give Ryan the command. [#7](https://github.com/Geemir/http-cache-simulator/issues/7)
+3. **Dec 3** — Combine the report sections into 3–4 pages, put the deliverables in a ZIP, and test it after extracting it to a new folder. Check the final ZIP and video link with Oscar. [#12](https://github.com/Geemir/http-cache-simulator/issues/12)
+
+## Team checkpoints
+
+- **Nov 23 at 21:00** — The three standard rules work, the program reads the course files, and the team has a written plan for the new rule. [M1](https://github.com/Geemir/http-cache-simulator/milestone/1)
+- **Nov 29 at 21:00** — The course results have been checked, the four rules have been tested on the planned inputs and cache sizes, and the first charts are ready. [M2](https://github.com/Geemir/http-cache-simulator/milestone/2)
+- **Dec 3 at 21:00** — The report and ZIP have been checked, all four people have recorded their segments, and the video link works. [M3](https://github.com/Geemir/http-cache-simulator/milestone/3)
+
+## Reference for coding and experiments
+
+- Use Python 3.10 or newer. The starter uses the standard library. `cache_sim/models.py` defines the data, `cache_sim/io.py` reads CSVs, `cache_sim/simulator.py` processes requests, `cache_sim/policies.py` contains the cache rules, and `cache_sim/__main__.py` handles the terminal command. Tests are in `tests/` and sample CSVs are in `examples/`. [Run the example](../README.md#quick-start)
+- The CSV reader works in file order. Confirm the course column names and units before adapting the reader. The simulator can record hits, misses, and removals in order. It provides overall and per-client summaries in JSON.
+- When checking the teacher’s results, start with an empty **102,400-byte** cache and use **5 ms** for a hit. Use the time in the resource table for a miss. If a file is bigger than the whole cache, leave it out.
+- In the full experiment, start each run with an empty cache. Give all rules the same request lists and cache sizes. Save the inputs, commands, and raw results. Report request hit rate, byte hit rate, average response time, and server traffic for the whole run and for each client.
