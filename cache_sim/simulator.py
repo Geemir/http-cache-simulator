@@ -88,6 +88,10 @@ def simulate(
                     evicted=tuple(evicted),
                     response_ms=response_ms,
                     origin_bytes=0 if hit else resource.size_bytes,
+                    cache_contents_oldest_first=tuple(entries),
+                    cache_used_bytes=used_bytes,
+                    cumulative_origin_bytes=overall.requested_bytes - overall.hit_bytes,
+                    cumulative_hits=overall.hits,
                 )
             )
 

@@ -37,6 +37,10 @@ class RequestEvent:
     evicted: tuple[str, ...]
     response_ms: float
     origin_bytes: int
+    cache_contents_oldest_first: tuple[str, ...] = ()
+    cache_used_bytes: int = 0
+    cumulative_origin_bytes: int = 0
+    cumulative_hits: int = 0
 
 
 @dataclass(frozen=True, slots=True)
