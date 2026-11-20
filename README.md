@@ -45,6 +45,22 @@ Change the policy to `lru` or `lfu` to compare step 7. FIFO evicts A, LRU evicts
 
 ## Input and output
 
+### Run an experiment matrix
+
+```shell
+python -m cache_sim.batch --plan examples/batch-plan.json --output results/sample-matrix.csv
+```
+
+The sample crosses the starter and Oscar traces with 10 B and 102,400 B. With FIFO, LRU and LFU it produces 12 cold-cache runs and 36 data rows. Filter `scope=overall` for one row per run or `scope=client` for per-client results. Each row carries the workload, policy, capacity, hit latency and the full-precision metrics from the single-run JSON. [Sample results](results/sample-matrix.csv)
+
+For the full experiment, copy the [sample plan](examples/batch-plan.json) to `experiments/plan.json`, enter Ryan’s agreed capacities in bytes, and list Oscar’s repetitive, sequential and mixed CSV pairs under `workloads`. Input paths are relative to the plan file. The runner picks up all policies in `cache_sim.policies.POLICIES`, including the fourth policy once registered. Save the agreed plan alongside the inputs. From the repository root run:
+
+```shell
+python -m cache_sim.batch --plan experiments/plan.json --output results/matrix.csv
+```
+
+### Single-run columns
+
 - The synthetic example uses `resource_id` in both CSVs in place of the three URL columns. The resource CSV needs `size_bytes` and `origin_latency_ms`. The requests CSV needs `client_id`. Named extra columns are ignored.
 - The JSON output includes request and byte hit ratios as fractions between zero and one, mean response time in milliseconds, and origin traffic in bytes.
 

@@ -45,6 +45,22 @@ python -m cache_sim --resources examples/oscar/demo/resources.csv \
 
 ## 输入与输出
 
+### 批量运行实验
+
+```shell
+python -m cache_sim.batch --plan examples/batch-plan.json --output results/sample-matrix.csv
+```
+
+样例用 README 和 Oscar 的两份轨迹，各跑 10 字节和 102,400 字节两档容量。以现有三种策略计算，共运行 12 次，每次从空缓存开始，合计输出 36 行数据。筛选 `scope=overall` 可看各组整体结果，筛选 `scope=client` 可按客户端比较。每行保留工作负载、策略、容量、命中延迟，以及单次运行 JSON 的全部统计值，保留原始精度。[样例结果表](results/sample-matrix.csv)
+
+正式实验时，将[样例计划](examples/batch-plan.json)复制为 `experiments/plan.json`，把容量改为 Ryan 确定的字节数，在 `workloads` 中填入 Oscar 的重复、顺序、混合三组 CSV 路径。输入路径相对于计划文件解析。命令会运行 `cache_sim.policies.POLICIES` 中的所有策略，第四种策略注册后会自动纳入。将正式计划与输入一并保存，在仓库根目录运行：
+
+```shell
+python -m cache_sim.batch --plan experiments/plan.json --output results/matrix.csv
+```
+
+### 单次运行的字段
+
 - 人工样例的两个 CSV 都使用 `resource_id` 代替三列 URL 字段。资源 CSV 需要 `size_bytes`（字节）和 `origin_latency_ms`（毫秒）。请求 CSV 需要 `client_id`（客户端标识）。读取器会忽略有列名的额外字段。
 - JSON 中的 `overall` 汇总整条轨迹，`clients` 按客户端分别统计。两处使用相同的指标字段。
 

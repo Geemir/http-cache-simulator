@@ -1,0 +1,8 @@
+{
+  "capacities_bytes": [10, 102400],
+  "hit_latency_ms": 5,
+  "workloads": {
+    "starter": {"resources": "resources.csv", "requests": "requests.csv"},
+    "oscar-demo": {"resources": "oscar/demo/resources.csv", "requests": "oscar/demo/requests.csv"}
+  }
+}
