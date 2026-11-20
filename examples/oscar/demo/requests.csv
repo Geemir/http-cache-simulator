@@ -1,0 +1,11 @@
+client_id,resource_id
+alice,A
+ben,B
+alice,B
+ben,B
+ben,A
+alice,C
+ben,D
+alice,E
+ben,C
+alice,B

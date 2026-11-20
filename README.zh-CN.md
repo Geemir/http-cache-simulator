@@ -17,15 +17,31 @@ python -m unittest discover -s tests -v
 
 ## 课程参考轨迹
 
-把课程的 `resources.csv` 和 `requests_reference.csv` 放在仓库根目录。两个文件用 `scheme`、`host` 和 `path` 标识资源。模拟器将三列拼成 URL，用它查找资源，并按文件行的顺序处理请求。按课程的模拟设定，HTTP 状态码和 Cache-Control 等字段不影响结果。
+Oscar 提供的六份课程文件已在仓库根目录。资源表 `resources.csv` 用 `scheme`、`host`、`path` 标识 URL，`size_bytes` 表示字节数，`origin_latency_ms` 表示源站延迟（毫秒）。请求表 `requests_reference.csv` 使用相同的 URL 三列，另有 `timestamp`、`client_id`、`method`。三个客户端的 15 次 GET 已按时间先后排列，程序按 CSV 行序回放。课程设定忽略 HTTP 状态码和 Cache-Control。
 
 ```shell
-python -m cache_sim --resources resources.csv --requests requests_reference.csv --policy lfu --events-csv lfu-events.csv
+mkdir -p results
+for policy in fifo lru lfu; do
+  python -m cache_sim --resources resources.csv --requests requests_reference.csv \
+    --capacity-bytes 102400 --hit-latency-ms 5 --policy "$policy" \
+    --events-csv "results/$policy-events.csv" > "results/$policy-summary.json"
+done
+python -m unittest discover -s tests -p test_reference.py -v
 ```
 
 可用 `--policy fifo`、`--policy lru` 或 `--policy lfu` 选择规则。可选的事件 CSV 记录每条请求是否命中、移出的资源、按入缓存时间从早到晚排序的缓存内容、缓存占用（字节）、响应时间，以及累计源站流量和命中次数。淘汰资源和缓存内容两列使用 JSON 数组保存资源标识。
 
-将课程的 `expected_fifo.csv`、`expected_lru.csv` 和 `expected_lfu.csv` 也放在根目录，运行测试便可逐条核对参考输出。
+最后一条命令会把日志中的 URL 映射为答案里的 A–E，将参考占用量从 KiB 换算成字节（1 KiB = 1,024 字节），并逐行核对三份 `expected_*.csv`。打开 JSON 的 `overall` 可快速复核：FIFO、LRU、LFU 分别命中 3、3、4 次，源站流量分别为 421,888、403,456、370,688 字节。
+
+## Oscar 的 10 次请求演示
+
+```shell
+python -m cache_sim --resources examples/oscar/demo/resources.csv \
+  --requests examples/oscar/demo/requests.csv --capacity-bytes 102400 \
+  --hit-latency-ms 5 --policy fifo --events-csv oscar-fifo-events.csv
+```
+
+将策略改为 `lru` 或 `lfu`，比较第 7 步的淘汰对象。FIFO 淘汰 A，LRU 淘汰 B，LFU 淘汰 C。第 8 步请求的资源为 120 KiB，三种策略均回源，缓存内容保持原样。[Oscar 的逐步手算表](docs/oscar_hand_calculation.md)
 
 ## 输入与输出
 
