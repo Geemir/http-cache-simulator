@@ -4,6 +4,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from typing import TextIO
 
 from .models import Request, RequestEvent, Resource
 
@@ -56,28 +57,35 @@ def iter_requests(path: Path) -> Iterator[Request]:
 
 
 @contextmanager
-def event_csv_writer(path: Path) -> Iterator[Callable[[RequestEvent], None]]:
-    """Stream events to a sibling file and publish it after a successful run."""
+def atomic_csv_output(path: Path) -> Iterator[TextIO]:
+    """Publish the CSV only after all rows have been written successfully."""
     stream = NamedTemporaryFile(mode="w", encoding="utf-8", newline="", dir=path.parent, delete=False)
     temporary_path = Path(stream.name)
     try:
         with stream:
-            writer = csv.writer(stream)
-            writer.writerow([
-                "step", "resource_id", "client_id", "result", "evicted",
-                "cache_contents_oldest_first", "cache_used_bytes", "response_ms",
-                "cumulative_origin_bytes", "cumulative_hits",
-            ])
-
-            def record(event: RequestEvent) -> None:
-                writer.writerow([
-                    event.request_number, event.request.resource_id, event.request.client_id,
-                    "HIT" if event.hit else "MISS", json.dumps(event.evicted),
-                    json.dumps(event.cache_contents_oldest_first), event.cache_used_bytes,
-                    event.response_ms, event.cumulative_origin_bytes, event.cumulative_hits,
-                ])
-
-            yield record
+            yield stream
         temporary_path.replace(path)
     finally:
         temporary_path.unlink(missing_ok=True)
+
+
+@contextmanager
+def event_csv_writer(path: Path) -> Iterator[Callable[[RequestEvent], None]]:
+    """Stream request events in simulation order."""
+    with atomic_csv_output(path) as stream:
+        writer = csv.writer(stream)
+        writer.writerow([
+            "step", "resource_id", "client_id", "result", "evicted",
+            "cache_contents_oldest_first", "cache_used_bytes", "response_ms",
+            "cumulative_origin_bytes", "cumulative_hits",
+        ])
+
+        def record(event: RequestEvent) -> None:
+            writer.writerow([
+                event.request_number, event.request.resource_id, event.request.client_id,
+                "HIT" if event.hit else "MISS", json.dumps(event.evicted),
+                json.dumps(event.cache_contents_oldest_first), event.cache_used_bytes,
+                event.response_ms, event.cumulative_origin_bytes, event.cumulative_hits,
+            ])
+
+        yield record
